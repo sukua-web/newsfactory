@@ -1,0 +1,5 @@
+Plaintext
+
+google-generativeai
+pillow
+requests
