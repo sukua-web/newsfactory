@@ -1,5 +1,4 @@
-Plaintext
-
+streamlit
 google-generativeai
 pillow
 requests
