@@ -140,17 +140,16 @@ def send_email_with_images(sender_email, app_password, receiver_email, subject, 
     msg['Subject'] = subject
     msg['From'] = sender_email
     msg['To'] = receiver_email
-    msg.set_content("이미지 첨부 테스트입니다.")
-    
-    # 이 부분(파일 첨부)을 잠시 주석 처리하고 실행해 보세요
-    # for img_path in image_files:
-    #     ...
-    
-    server = smtplib.SMTP('smtp.gmail.com', 587)
-    server.starttls()
-    server.login(sender_email, app_password)
-    server.send_message(msg)
-    server.quit()
+    msg.set_content("AI가 생성한 카드뉴스 이미지가 첨부되었습니다.\n\n- AI 인스타 카드뉴스 공장")
+
+    for img_path in image_files:
+        with open(img_path, 'rb') as f:
+            img_data = f.read()
+            msg.add_attachment(img_data, maintype='image', subtype='png', filename=img_path)
+
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+        smtp.login(sender_email, app_password)
+        smtp.send_message(msg)
 
 # 6. 실행 로직
 if st.button("🚀 카드뉴스 5장 생성하기"):
