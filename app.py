@@ -237,23 +237,29 @@ if st.button("🚀 카드뉴스 5장 생성하기"):
                 target_email = st.secrets["GMAIL_USER"]
                 st.info(f"📬 설정된 계정({target_email})으로 발송됩니다.")
                 
-                if st.button("📤 내 이메일로 바로 전송하기"):
-                    with st.spinner("이미지를 이메일로 전송 중..."):
+                # --- ✨ 이메일 전송 로직 개선 ---
+            if st.button("📤 내 이메일로 바로 전송하기"):
+                # 1. 파일이 진짜 있는지 먼저 체크
+                file_names = [fname for fname, img in generated_images]
+                missing_files = [f for f in file_names if not os.path.exists(f)]
+    
+                if missing_files:
+                    st.error(f"파일이 생성되지 않았습니다: {missing_files}")
+                else:
+                    # 2. 로딩 메시지 명시 (여기에 스피너를 확실히 넣습니다)
+                    with st.spinner("메일 서버에 연결하여 파일을 전송 중입니다..."):
                         try:
-                            # 1. 파일 경로 리스트 생성
-                            file_names = [fname for fname, img in generated_images]
-                            
-                            # 2. 이메일 발송 함수 호출
                             send_email_with_images(
                                 sender_email=st.secrets["GMAIL_USER"],
                                 app_password=st.secrets["GMAIL_PASS"].replace(" ", ""),
-                                receiver_email=target_email,
-                                subject=f"[카드뉴스 자동완성] '{user_topic}' 주제의 카드뉴스입니다.",
+                                receiver_email=st.secrets["GMAIL_USER"],
+                                subject=f"[카드뉴스] '{user_topic}' 카드뉴스 발송",
                                 image_files=file_names
                             )
-                            st.success("✅ 전송이 완료되었습니다! 메일함을 확인해 보세요.")
+                            st.success("✅ 메일 발송 성공!")
                         except Exception as e:
-                            # 여기서 에러가 뜨면 무엇이 문제인지 정확히 알 수 있습니다.
-                            st.error(f"메일 발송 실패 사유: {e}")
+                            # 에러 발생 시 초기화되지 않도록 상세 내용을 띄웁니다.
+                            st.error(f"메일 발송 오류 발생: {e}")
+                            st.exception(e) # 에러의 상세 위치를 보여줌
 
                 # (기존 메일 전송 코드 위치에 아래 내용을 넣으세요)
