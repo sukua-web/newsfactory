@@ -92,6 +92,27 @@ def fetch_pexels_image(query, api_key):
     except: return None
     return None
 
+def draw_japanese_text_forced(draw, position, text, font, text_color, outline_color, outline_width=2):
+    # 일본어는 줄당 16자 기준으로 강제 줄바꿈
+    chars_per_line = 16 
+    lines = [text[i:i+chars_per_line] for i in range(0, len(text), chars_per_line)]
+    
+    # 폰트 높이 계산 (기존 폰트 객체에서 높이 가져오기)
+    line_height = font.getbbox("あ")[3] - font.getbbox("あ")[1]
+    
+    total_height = len(lines) * (line_height + 20)
+    current_y = position[1] - total_height // 2
+    
+    for line in lines:
+        x, y = position[0], current_y
+        # 외곽선 렌더링
+        for dx in range(-outline_width, outline_width+1):
+            for dy in range(-outline_width, outline_width+1):
+                draw.text((x+dx, y+dy), line, fill=outline_color, font=font, anchor="mm", align="center")
+        # 텍스트 렌더링
+        draw.text((x, y), line, fill=text_color, font=font, anchor="mm", align="center")
+        current_y += (line_height + 20)
+
 # 5. 실행 로직
 if st.button("🚀 카드뉴스 5장 생성하기"):
     if not gemini_key or not user_topic:
@@ -140,7 +161,7 @@ if st.button("🚀 카드뉴스 5장 생성하기"):
                     
                     draw_wrapped_text_with_outline(draw, (width//2, height//3), slide.get("main_en", ""), font_en, color_main, outline, width-240)
                     draw_wrapped_text_with_outline(draw, (width//2, height//2+100), slide.get("sub_ko", ""), font_ko, color_sub, outline, width-240)
-                    draw_wrapped_text_with_outline(draw, (width//2, height//2+250), slide.get("sub_ja", ""), font_ja, color_sub, outline, width-300, is_japanese=True)
+                    draw_japanese_text_forced(draw, (width//2, height//2+250), slide.get("sub_ja", ""), font_ja, color_sub, outline)
                     
                     fname = f"slide_{idx+1}.png"
                     bg.save(fname)
