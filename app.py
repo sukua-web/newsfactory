@@ -174,17 +174,25 @@ if st.button("🚀 카드뉴스 5장 생성하기"):
             
             generated_images = []
             for idx, slide in enumerate(slides_data):
-                # SerpApi 이미지 검색 호출
-                bg = fetch_serpapi_image(slide.get("search_keyword", user_topic), serpapi_key) if serpapi_key else None
+                bg = None
+                # 재시도 로직: 최대 3번까지 시도
+                for attempt in range(3):
+                    bg = fetch_serpapi_image(slide.get("search_keyword", user_topic), serpapi_key)
+                    if bg:
+                        break # 성공하면 루프 탈출
+                    time.sleep(1) # 실패 시 1초 대기 후 재시도
                 
+                # 최종 성공 여부 확인
                 if bg:
                     bg = bg.resize((width, height), Image.Resampling.LANCZOS)
                     bg = ImageEnhance.Brightness(bg).enhance(0.4)
                     c_main, c_sub, out = "#FFFFFF", "#E5E7EB", "#000000"
                 else:
+                    # 3번 다 실패하면 파스텔 배경
                     bg = Image.new("RGB", (width, height), color=random.choice(["#FFB3BA", "#FFDFBA", "#FFFFBA", "#BAFFC9", "#BAE1FF"]))
                     c_main, c_sub, out = "#111827", "#374151", "#FFFFFF"
                 
+                # (이후 디자인 드로잉 로직은 동일)
                 draw = ImageDraw.Draw(bg)
                 draw.rectangle([60, 60, width-60, height-60], outline=c_main, width=4)
                 draw_wrapped_text_with_outline(draw, (width//2, height//3), slide.get("main_en", ""), font_en, c_main, out, width-240)
