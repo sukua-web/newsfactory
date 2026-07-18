@@ -11,6 +11,9 @@ from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance
 import google.generativeai as genai
 from serpapi import GoogleSearch
+# 만약 위 코드가 계속 에러가 난다면 아래 방식으로 바꿔보세요:
+# import serpapi
+# client = serpapi.Client(api_key="내_API_KEY")
 
 # 1. 페이지 설정
 st.set_page_config(page_title="AI 인스타 카드뉴스 공장", page_icon="🎨", layout="centered")
