@@ -237,7 +237,8 @@ if st.button("🚀 카드뉴스 5장 생성하기"):
                 with cols[i]:
                     st.image(img, use_container_width=True)
                     with open(fname, "rb") as f: 
-                        st.download_button("💾 다운", f, fname)
+                        # key=f"dl_{i}"를 추가하여 dl_0, dl_1, dl_2... 형태로 고유 ID를 부여합니다.
+                        st.download_button("💾 다운", f, fname, key=f"dl_{i}")
             
             # --- 👇 여기부터 새로 추가할 이메일 전송 UI 👇 ---
             st.divider()
