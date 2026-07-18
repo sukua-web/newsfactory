@@ -5,6 +5,8 @@ import json
 import random
 import re
 import time
+import smtplib
+from email.message import EmailMessage
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance
 import google.generativeai as genai
@@ -125,6 +127,25 @@ def draw_smart_text_with_outline(draw, position, text, font, text_color, outline
         draw.text((x, y), line, fill=text_color, font=font, anchor="mm", align="center")
         current_y += h + line_spacing
 
+# 5.5 이메일 발송 헬퍼 함수
+def send_email_with_images(sender_email, app_password, receiver_email, subject, image_files):
+    msg = EmailMessage()
+    msg['Subject'] = subject
+    msg['From'] = sender_email
+    msg['To'] = receiver_email
+    msg.set_content("AI가 생성한 카드뉴스 이미지가 첨부되었습니다.\n\n- AI 인스타 카드뉴스 공장")
+
+    # 생성된 이미지 파일들을 하나씩 첨부
+    for img_path in image_files:
+        with open(img_path, 'rb') as f:
+            img_data = f.read()
+            msg.add_attachment(img_data, maintype='image', subtype='png', filename=img_path)
+
+    # Gmail SMTP 서버를 통해 발송
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+        smtp.login(sender_email, app_password)
+        smtp.send_message(msg)
+
 # 6. 실행 로직 (작성자님이 경험으로 찾으신 AI 모델, 정규식 파싱 로직 완벽 유지)
 if st.button("🚀 카드뉴스 5장 생성하기"):
     if not gemini_key or not user_topic:
@@ -208,3 +229,42 @@ if st.button("🚀 카드뉴스 5장 생성하기"):
                     st.image(img, use_container_width=True)
                     with open(fname, "rb") as f: 
                         st.download_button("💾 다운", f, fname)
+
+# --- 기존 코드 끝부분 ---
+            st.success("완성!")
+            cols = st.columns(5)
+            for i, (fname, img) in enumerate(generated_images):
+                with cols[i]:
+                    st.image(img, use_container_width=True)
+                    with open(fname, "rb") as f: 
+                        st.download_button("💾 다운", f, fname)
+            
+            # --- 👇 여기부터 새로 추가할 이메일 전송 UI 👇 ---
+            st.divider()
+            st.subheader("✉️ 완성된 카드뉴스 이메일로 받기")
+            
+            # 발송자 정보는 코드에 고정해두거나 사이드바에서 받도록 할 수 있습니다.
+            # (테스트하실 때는 본인의 Gmail과 위에서 받은 16자리 앱 비밀번호를 직접 입력하세요)
+            sender_gmail = st.text_input("보내는 사람 Gmail", placeholder="example@gmail.com")
+            gmail_app_password = st.text_input("Gmail 앱 비밀번호", type="password", placeholder="16자리 영문 소문자")
+            
+            receiver_email = st.text_input("받을 사람 이메일 주소", placeholder="receiver@example.com")
+            
+            if st.button("📤 첨부파일로 전송하기"):
+                if not sender_gmail or not gmail_app_password or not receiver_email:
+                    st.warning("이메일 주소와 앱 비밀번호를 모두 입력해주세요.")
+                else:
+                    with st.spinner("이메일을 전송 중입니다..."):
+                        try:
+                            # generated_images 리스트에 있는 파일 이름(fname)들만 모아서 전달
+                            file_names = [fname for fname, img in generated_images]
+                            send_email_with_images(
+                                sender_email=sender_gmail,
+                                app_password=gmail_app_password.replace(" ", ""), # 띄어쓰기 제거
+                                receiver_email=receiver_email,
+                                subject=f"[카드뉴스 자동완성] '{user_topic}' 주제의 카드뉴스입니다.",
+                                image_files=file_names
+                            )
+                            st.success(f"✅ {receiver_email} 님에게 이메일이 성공적으로 전송되었습니다!")
+                        except Exception as e:
+                            st.error(f"이메일 전송 실패: {e}")
