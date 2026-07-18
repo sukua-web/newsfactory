@@ -135,8 +135,15 @@ if st.button("🚀 카드뉴스 5장 생성하기"):
         with st.spinner("AI가 다국어 기획 및 디자인을 진행 중입니다. 잠시만 기다려주세요..."):
             
             try:
-                # 모델 연결
-                model = genai.GenerativeModel("gemini-1.5-flash") # 최신 빠르고 저렴한 모델 명시적 지정
+                # 연결 가능한 최신 Flash 모델 자동 스캔 및 연결
+target_model_name = "gemini-pro" # 기본값
+for m in genai.list_models():
+    if 'generateContent' in m.supported_generation_methods:
+        if 'flash' in m.name.lower():
+            target_model_name = m.name.replace('models/', '')
+            break # flash 모델을 찾으면 최우선 할당 후 종료
+            
+model = genai.GenerativeModel(target_model_name)
                 
                 # [개선] 다국어(영/한/일) 및 Pexels 검색용 영문 키워드 프롬프트
                 prompt = f"주제: '{user_topic}'\n"
