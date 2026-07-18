@@ -167,7 +167,7 @@ if st.button("🚀 카드뉴스 5장 생성하기"):
                     
                     draw_wrapped_text_with_outline(draw, (width//2, height//3), slide.get("main_en", ""), font_en, color_main, outline, width-240)
                     draw_wrapped_text_with_outline(draw, (width//2, height//2+100), slide.get("sub_ko", ""), font_ko, color_sub, outline, width-240)
-                    draw_japanese_text_forced(draw, (width//2, height//2+350), slide.get("sub_ja", ""), font_ja, color_sub, outline)
+                    draw_japanese_text_forced(draw, (width//2, height//2+300), slide.get("sub_ja", ""), font_ja, color_sub, outline)
                     
                     fname = f"slide_{idx+1}.png"
                     bg.save(fname)
