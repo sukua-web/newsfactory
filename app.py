@@ -4,6 +4,7 @@ import requests
 import json
 import random
 import re # 코드 상단에 추가해야 합니다
+import time  # <--- 이 줄이 빠져있을 겁니다. 추가해 주세요!
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance
 import google.generativeai as genai
