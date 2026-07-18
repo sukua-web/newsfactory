@@ -53,11 +53,25 @@ def fetch_serpapi_image(query, api_key):
         results = search.get_dict()
         
         if "images_results" in results and len(results["images_results"]) > 0:
-            img_url = results["images_results"][0]["original"]
-            img_response = requests.get(img_url, timeout=10)
-            return Image.open(BytesIO(img_response.content))
+            # 여러 결과 중 첫 번째에서 이미지 링크 추출
+            img_url = results["images_results"][0].get("original")
+            
+            if not img_url:
+                return None
+                
+            # 이미지 다운로드 시도
+            headers = {'User-Agent': 'Mozilla/5.0'} # 웹사이트 차단 방지
+            img_response = requests.get(img_url, headers=headers, timeout=10)
+            
+            # 응답이 정상이고 이미지인지 확인
+            if img_response.status_code == 200:
+                img_content = BytesIO(img_response.content)
+                # 여기서 실제 이미지 파일인지 검증
+                return Image.open(img_content)
+                
     except Exception as e:
-        st.error(f"이미지 검색 실패: {e}")
+        # 이미지 파일이 아니거나 에러 발생 시 None 반환
+        return None
     return None
 
 # 5. 그리기 헬퍼 함수들 (기존과 동일)
