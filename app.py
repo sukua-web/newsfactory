@@ -3,6 +3,7 @@ import os
 import requests
 import json
 import random
+import re # 코드 상단에 추가해야 합니다
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance
 import google.generativeai as genai
@@ -133,7 +134,23 @@ if st.button("🚀 카드뉴스 5장 생성하기"):
             prompt = f"주제: '{user_topic}'\n인스타그램 카드뉴스 5장 기획. JSON 배열로 출력. 키: slide_num, main_en, sub_ko, sub_ja, search_keyword."
             response = model.generate_content(prompt)
             
-            json_text = response.text.replace("```json", "").replace("```", "").strip()
+            # 3. JSON 데이터 처리 부분 (기존 json.loads 부분을 아래로 교체)
+            raw_text = response.text.replace("```json", "").replace("```", "").strip()
+
+            # 혹시 앞뒤에 잡담이 붙어있을 경우를 대비해 JSON 부분만 정규식으로 추출
+            match = re.search(r'\[.*\]', raw_text, re.DOTALL)
+            if match:
+                json_text = match.group()
+            else:
+                json_text = raw_text
+
+            try:
+                slides_data = json.loads(json_text)
+            except json.JSONDecodeError as e:
+                st.error("AI가 올바른 형식의 데이터를 주지 않았습니다.")
+                st.text(f"Raw Output: {raw_text}") # 어떤 응답이 왔는지 확인
+                st.stop()
+            
             slides_data = json.loads(json_text)
             
             width, height = 1080, 1350
