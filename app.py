@@ -93,25 +93,28 @@ def fetch_pexels_image(query, api_key):
     return None
 
 def draw_japanese_text_forced(draw, position, text, font, text_color, outline_color, outline_width=2):
-    # 일본어는 줄당 16자 기준으로 강제 줄바꿈
     chars_per_line = 16 
     lines = [text[i:i+chars_per_line] for i in range(0, len(text), chars_per_line)]
     
-    # 폰트 높이 계산 (기존 폰트 객체에서 높이 가져오기)
     line_height = font.getbbox("あ")[3] - font.getbbox("あ")[1]
     
-    total_height = len(lines) * (line_height + 20)
-    current_y = position[1] - total_height // 2
+    # 20 -> 40으로 늘려 줄 간격 확보
+    line_spacing = 40 
+    total_height = len(lines) * (line_height + line_spacing)
+    
+    # position[1]이 일본어 문단의 '중심' 위치인데, 
+    # 문단이 길어질수록 위로 삐져나오지 않게 살짝 아래로 내리는 것이 좋습니다.
+    current_y = position[1]
     
     for line in lines:
         x, y = position[0], current_y
-        # 외곽선 렌더링
+        # 외곽선
         for dx in range(-outline_width, outline_width+1):
             for dy in range(-outline_width, outline_width+1):
                 draw.text((x+dx, y+dy), line, fill=outline_color, font=font, anchor="mm", align="center")
-        # 텍스트 렌더링
+        # 텍스트
         draw.text((x, y), line, fill=text_color, font=font, anchor="mm", align="center")
-        current_y += (line_height + 20)
+        current_y += (line_height + line_spacing)
 
 # 5. 실행 로직
 if st.button("🚀 카드뉴스 5장 생성하기"):
@@ -161,7 +164,7 @@ if st.button("🚀 카드뉴스 5장 생성하기"):
                     
                     draw_wrapped_text_with_outline(draw, (width//2, height//3), slide.get("main_en", ""), font_en, color_main, outline, width-240)
                     draw_wrapped_text_with_outline(draw, (width//2, height//2+100), slide.get("sub_ko", ""), font_ko, color_sub, outline, width-240)
-                    draw_japanese_text_forced(draw, (width//2, height//2+250), slide.get("sub_ja", ""), font_ja, color_sub, outline)
+                    draw_japanese_text_forced(draw, (width//2, height//2+350), slide.get("sub_ja", ""), font_ja, color_sub, outline)
                     
                     fname = f"slide_{idx+1}.png"
                     bg.save(fname)
