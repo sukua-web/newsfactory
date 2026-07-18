@@ -229,27 +229,30 @@ if st.button("🚀 카드뉴스 5장 생성하기"):
             st.divider()
             st.subheader("✉️ 완성된 카드뉴스 내 이메일로 받기")
             
-            # secrets에 정보가 올바르게 들어있는지 검증
             if "GMAIL_USER" not in st.secrets or "GMAIL_PASS" not in st.secrets:
-                st.error("⚠️ `.streamlit/secrets.toml` 파일에 GMAIL_USER와 GMAIL_PASS 설정이 누락되었습니다.")
+                st.error("⚠️ `.streamlit/secrets.toml` 설정이 누락되었습니다.")
             else:
                 target_email = st.secrets["GMAIL_USER"]
-                st.info(f"📬 버튼을 누르면 설정된 계정({target_email})으로 즉시 발송됩니다.")
+                st.info(f"📬 설정된 계정({target_email})으로 발송됩니다.")
                 
                 if st.button("📤 내 이메일로 바로 전송하기"):
-                    with st.spinner("비밀 금고에서 계정을 조회해 이메일을 안전하게 전송 중입니다..."):
+                    with st.spinner("이미지를 이메일로 전송 중..."):
                         try:
+                            # 1. 파일 경로 리스트 생성
                             file_names = [fname for fname, img in generated_images]
+                            
+                            # 2. 이메일 발송 함수 호출
                             send_email_with_images(
                                 sender_email=st.secrets["GMAIL_USER"],
                                 app_password=st.secrets["GMAIL_PASS"].replace(" ", ""),
-                                receiver_email=target_email, # 보낸 사람 나 자신에게 그대로 발송
+                                receiver_email=target_email,
                                 subject=f"[카드뉴스 자동완성] '{user_topic}' 주제의 카드뉴스입니다.",
                                 image_files=file_names
                             )
-                            st.success(f"✅ {target_email} 으로 전송이 완료되었습니다! 메일함을 확인해 보세요.")
+                            st.success("✅ 전송이 완료되었습니다! 메일함을 확인해 보세요.")
                         except Exception as e:
-                            st.error(f"이메일 전송 실패: {e}")
+                            # 여기서 에러가 뜨면 무엇이 문제인지 정확히 알 수 있습니다.
+                            st.error(f"메일 발송 실패 사유: {e}")
 
                 # (기존 메일 전송 코드 위치에 아래 내용을 넣으세요)
 try:
