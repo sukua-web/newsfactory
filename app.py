@@ -41,7 +41,7 @@ def load_assets():
 font_path = load_assets()
 user_topic = st.text_input("✍️ 제작하고 싶은 카드뉴스 주제를 입력하세요")
 
-# 4. 이미지 검색 함수 (SerpApi 사용 - 유지)
+# 4. 이미지 검색 함수 (SerpApi 사용 - 효율 극대화)
 def fetch_serpapi_image(query, api_key):
     try:
         params = {
@@ -53,19 +53,26 @@ def fetch_serpapi_image(query, api_key):
         search = GoogleSearch(params)
         results = search.get_dict()
         
-        if "images_results" in results and len(results["images_results"]) > 0:
-            img_url = results["images_results"][0].get("original")
-            if not img_url:
-                return None
-                
-            headers = {'User-Agent': 'Mozilla/5.0'}
-            img_response = requests.get(img_url, headers=headers, timeout=10)
-            
-            if img_response.status_code == 200:
-                img_content = BytesIO(img_response.content)
-                # 다운받은 이미지를 무조건 RGB(일반 컬러) 모드로 강제 변환합니다.
-                return Image.open(img_content).convert("RGB")
-                
+        if "images_results" in results:
+            # ✨ 핵심 변경: 한 번 검색한 결과에서 상위 5개의 이미지를 순서대로 찔러봅니다.
+            for img_data in results["images_results"][:5]:
+                img_url = img_data.get("original")
+                if not img_url:
+                    continue
+                    
+                try:
+                    headers = {'User-Agent': 'Mozilla/5.0'}
+                    # timeout을 5초로 줄여서 죽은 링크에서 너무 오래 대기하지 않게 합니다.
+                    img_response = requests.get(img_url, headers=headers, timeout=5)
+                    
+                    if img_response.status_code == 200:
+                        img_content = BytesIO(img_response.content)
+                        # 에러 방지용 RGB 변환 포함
+                        return Image.open(img_content).convert("RGB")
+                except Exception:
+                    # 이 이미지 다운로드에 실패하면 크레딧 소모 없이 바로 다음 이미지로 넘어갑니다.
+                    continue
+                    
     except Exception as e:
         return None
     return None
@@ -166,12 +173,13 @@ if st.button("🚀 카드뉴스 5장 생성하기"):
             
             generated_images = []
             for idx, slide in enumerate(slides_data):
-                bg = None
-                for attempt in range(3):
-                    bg = fetch_serpapi_image(slide.get("search_keyword", user_topic), serpapi_key)
-                    if bg:
-                        break
+                # 1. AI가 추천한 키워드로 먼저 시도 (함수 내부에서 상위 5개 이미지 순회)
+                bg = fetch_serpapi_image(slide.get("search_keyword", user_topic), serpapi_key)
+                
+                # 2. 만약 5개를 다 찔러봤는데도 실패했다면, 메인 주제(user_topic)로 딱 한 번만 더 안전하게 재시도
+                if not bg and slide.get("search_keyword") != user_topic:
                     time.sleep(1)
+                    bg = fetch_serpapi_image(user_topic, serpapi_key)
                 
                 if bg:
                     bg = bg.resize((width, height), Image.Resampling.LANCZOS)
