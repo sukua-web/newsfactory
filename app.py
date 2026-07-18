@@ -242,10 +242,10 @@ if st.button("🚀 카드뉴스 5장 생성하기"):
                 target_email = st.secrets["GMAIL_USER"]
                 st.info(f"📬 설정된 계정({target_email})으로 발송됩니다.")
                 
-                # --- ✨ 이메일 전송 로직 개선 ---
+            # --- ✨ 이메일 전송 로직 개선 ---
             # 버튼 클릭 시 세션 상태를 True로 변경
             if st.button("📤 내 이메일로 바로 전송하기"):
-            st.session_state.sending_email = True
+               st.session_state.sending_email = True
 
             # 세션 상태가 True일 때 실제 메일 발송 로직 실행
             if st.session_state.sending_email:
