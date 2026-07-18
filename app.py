@@ -41,12 +41,23 @@ font_path = load_assets()
 user_topic = st.text_input("✍️ 제작하고 싶은 카드뉴스 주제를 입력하세요", placeholder="예: 테슬라 FSD의 혁신적인 기술력")
 
 # 4. 헬퍼 함수들
-def wrap_text_by_word(text, font, max_width, draw):
-    words = str(text).split(" ")
+def wrap_text_by_word(text, font, max_width, draw, is_japanese=False):
+    # 일본어처럼 띄어쓰기가 없는 경우 글자 단위로 처리
+    if is_japanese:
+        words = list(str(text))
+    else:
+        words = str(text).split(" ")
+        
     lines = []
     current_line = ""
+    
     for word in words:
-        test_line = f"{current_line} {word}".strip()
+        # 일본어는 공백을 붙이지 않고 글자를 바로 이어 붙임
+        if is_japanese:
+            test_line = current_line + word
+        else:
+            test_line = f"{current_line} {word}".strip()
+            
         if draw.textbbox((0, 0), test_line, font=font)[2] <= max_width:
             current_line = test_line
         else:
@@ -55,7 +66,8 @@ def wrap_text_by_word(text, font, max_width, draw):
     if current_line: lines.append(current_line)
     return lines
 
-def draw_wrapped_text_with_outline(draw, position, text, font, text_color, outline_color, max_width, outline_width=2):
+def draw_wrapped_text_with_outline(draw, position, text, font, text_color, outline_color, max_width, outline_width=2, is_japanese=False):
+    lines = wrap_text_by_word(text, font, max_width, draw, is_japanese=is_japanese)
     lines = wrap_text_by_word(text, font, max_width, draw)
     line_heights = [draw.textbbox((0,0), line, font=font)[3] - draw.textbbox((0,0), line, font=font)[1] for line in lines]
     total_height = sum(line_heights) + 15 * (len(lines) - 1)
@@ -128,7 +140,7 @@ if st.button("🚀 카드뉴스 5장 생성하기"):
                     
                     draw_wrapped_text_with_outline(draw, (width//2, height//3), slide.get("main_en", ""), font_en, color_main, outline, width-240)
                     draw_wrapped_text_with_outline(draw, (width//2, height//2+100), slide.get("sub_ko", ""), font_ko, color_sub, outline, width-240)
-                    draw_wrapped_text_with_outline(draw, (width//2, height//2+250), slide.get("sub_ja", ""), font_ja, color_sub, outline, width-240)
+                    draw_wrapped_text_with_outline(draw, (width//2, height//2+250), slide.get("sub_ja", ""), font_ja, color_sub, outline, width-240, is_japanese=True)
                     
                     fname = f"slide_{idx+1}.png"
                     bg.save(fname)
