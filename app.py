@@ -81,6 +81,9 @@ def draw_wrapped_text_with_outline(draw, position, text, font, text_color, outli
         current_y += h + 15
 
 def fetch_pexels_image(query, api_key):
+    # 쿼리에 무조건 'no people' 속성을 추가하거나 
+    # 검색 키워드에 'no people'을 강제 삽입
+    search_q = f"{query} -people"
     try:
         url = f"https://api.pexels.com/v1/search?query={query}&per_page=1&orientation=portrait"
         response = requests.get(url, headers={"Authorization": api_key}, timeout=10)
