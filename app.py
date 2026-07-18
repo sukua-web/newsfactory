@@ -141,10 +141,11 @@ if st.button("🚀 카드뉴스 5장 생성하기"):
     else:
         with st.spinner("AI가 작업 중입니다..."):
             
-            # 잘 쓰시던 모델명 리스트 그대로 유지 및 안전장치 적용
             models_to_try = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash']
             model = None
             is_model_ready = False 
+            
+            error_logs = [] # 💡 구글의 거절 사유를 기록할 리스트
             
             for m_name in models_to_try:
                 try:
@@ -155,11 +156,16 @@ if st.button("🚀 카드뉴스 5장 생성하기"):
                     model = temp_model
                     is_model_ready = True
                     break 
-                except Exception:
+                except Exception as e:
+                    # 실패하면 에러 메시지를 기록해둡니다.
+                    error_logs.append(f"{m_name} 실패 사유: {str(e)}")
                     continue
             
+            # 모든 모델이 실패했다면 화면에 사유를 띄웁니다!
             if not is_model_ready:
-                st.error("⚠️ 현재 API 서버 응답이 지연되거나 일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.")
+                st.error("⚠️ 구글 API 서버가 요청을 거절했습니다. 아래 에러 메시지를 확인해주세요!")
+                for log in error_logs:
+                    st.warning(log)
                 st.stop()
 
             prompt = f"주제: '{user_topic}'\n인스타그램 카드뉴스 5장 기획. JSON 배열로 출력. 키: slide_num, main_en, sub_ko, sub_ja, search_keyword."
