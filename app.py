@@ -14,9 +14,11 @@ from PIL import Image, ImageDraw, ImageFont, ImageEnhance
 import google.generativeai as genai
 from serpapi import GoogleSearch
 
-# 세션 상태 초기화 (버튼 누른 상태를 기억함)
+# 세션 상태 초기화
 if "sending_email" not in st.session_state:
     st.session_state.sending_email = False
+if "generated_images" not in st.session_state:
+    st.session_state.generated_images = [] # 여기에 이미지 리스트를 저장할 겁니다
     
 # 만약 위 코드가 계속 에러가 난다면 아래 방식으로 바꿔보세요:
 # import serpapi
@@ -196,7 +198,9 @@ if st.button("🚀 카드뉴스 5장 생성하기"):
             font_ko = ImageFont.truetype(font_path, 45)
             font_ja = ImageFont.truetype(font_path, 35)
             
-            generated_images = []
+            # (수정 전) generated_images = [] 
+            # (수정 후)
+            st.session_state.generated_images = []
             for idx, slide in enumerate(slides_data):
                 bg = fetch_serpapi_image(slide.get("search_keyword", user_topic), serpapi_key)
                 
@@ -225,7 +229,9 @@ if st.button("🚀 카드뉴스 5장 생성하기"):
             
             st.success("완성!")
             cols = st.columns(5)
-            for i, (fname, img) in enumerate(generated_images):
+            # (수정 전) for i, (fname, img) in enumerate(generated_images):
+            # (수정 후)
+            for i, (fname, img) in enumerate(st.session_state.generated_images):
                 with cols[i]:
                     st.image(img, use_container_width=True)
                     with open(fname, "rb") as f: 
@@ -250,7 +256,9 @@ if st.button("🚀 카드뉴스 5장 생성하기"):
             if st.session_state.sending_email:
                 try:
                     with st.spinner("메일 발송 중..."):
-                        file_names = [fname for fname, img in generated_images]
+                        # 세션에 저장된 이미지 정보 활용
+                        file_names = [item[0] for item in st.session_state.generated_images]
+                        
                         send_email_with_images(
                             sender_email=st.secrets["GMAIL_USER"],
                             app_password=st.secrets["GMAIL_PASS"].replace(" ", ""),
@@ -262,7 +270,6 @@ if st.button("🚀 카드뉴스 5장 생성하기"):
                 except Exception as e:
                     st.error(f"오류 발생: {e}")
                 finally:
-                    # 작업이 끝나면 상태를 다시 False로 돌림
                     st.session_state.sending_email = False
 
                 # (기존 메일 전송 코드 위치에 아래 내용을 넣으세요)
