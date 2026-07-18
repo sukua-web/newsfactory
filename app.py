@@ -109,7 +109,27 @@ if st.button("🚀 카드뉴스 5장 생성하기"):
         st.warning("API 키와 주제를 확인하세요.")
     else:
         with st.spinner("AI가 작업 중입니다..."):
-            model = genai.GenerativeModel('gemini-1.5-flash')
+           # 고생해서 찾은 모델 리스트 유지
+            models_to_try = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-3.1-flash-lite', 'gemini-3.5-flash', 'gemini-1.5-flash']
+            model = None
+            
+            for m_name in models_to_try:
+                try:
+                    # 각 모델마다 생성 메서드를 안전하게 호출
+                    model = genai.GenerativeModel(m_name)
+                    # 실제 연결 테스트
+                    model.generate_content("Hi", generation_config={"max_output_tokens": 5})
+                    st.toast(f"✅ 모델 연결 성공: {m_name}")
+                    break 
+                except Exception as e:
+                    # NotFound나 기타 에러가 나도 조용히 다음 모델로 넘어가게 함
+                    continue
+            
+            if not model:
+                st.error("연결 가능한 모델을 찾지 못했습니다. API 키 권한이나 모델명을 확인해주세요.")
+                st.stop()
+
+            # (이후 기존의 prompt 및 json 파싱 로직은 그대로 사용)
             prompt = f"주제: '{user_topic}'\n인스타그램 카드뉴스 5장 기획. JSON 배열로 출력. 키: slide_num, main_en, sub_ko, sub_ja, search_keyword."
             response = model.generate_content(prompt)
             
