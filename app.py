@@ -18,7 +18,7 @@ from serpapi import GoogleSearch
 if "sending_email" not in st.session_state:
     st.session_state.sending_email = False
 if "generated_images" not in st.session_state:
-    st.session_state.generated_images = [] # 여기에 이미지 리스트를 저장할 겁니다
+    st.session_state.generated_images = []
     
 # 만약 위 코드가 계속 에러가 난다면 아래 방식으로 바꿔보세요:
 # import serpapi
@@ -228,9 +228,8 @@ if st.button("🚀 카드뉴스 5장 생성하기"):
                 generated_images.append((fname, bg))
             
             st.success("완성!")
+           # 아래 다운로드 버튼 부분도 수정
             cols = st.columns(5)
-            # (수정 전) for i, (fname, img) in enumerate(generated_images):
-            # (수정 후)
             for i, (fname, img) in enumerate(st.session_state.generated_images):
                 with cols[i]:
                     st.image(img, use_container_width=True)
@@ -256,7 +255,7 @@ if st.button("🚀 카드뉴스 5장 생성하기"):
             if st.session_state.sending_email:
                 try:
                     with st.spinner("메일 발송 중..."):
-                        # 세션에 저장된 이미지 정보 활용
+                        # 세션에 저장된 데이터에서 파일명만 추출
                         file_names = [item[0] for item in st.session_state.generated_images]
                         
                         send_email_with_images(
