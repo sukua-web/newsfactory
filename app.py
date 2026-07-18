@@ -80,19 +80,27 @@ def draw_wrapped_text_with_outline(draw, position, text, font, text_color, outli
         draw.text((x, y), line, fill=text_color, font=font, anchor="mm", align="center")
         current_y += h + 15
 
-def fetch_pexels_image(query, api_key):
-    # 쿼리에 무조건 'no people' 속성을 추가하거나 
-    # 검색 키워드에 'no people'을 강제 삽입
-    search_q = f"{query} -people"
+def fetch_serpapi_image(query, api_key):
+    # SerpApi의 구글 이미지 검색 엔드포인트
+    url = "https://serpapi.com/search"
+    params = {
+        "engine": "google_images",
+        "q": query,
+        "api_key": api_key,
+        "ijn": "0" # 첫 번째 페이지 검색
+    }
+    
     try:
-        url = f"https://api.pexels.com/v1/search?query={query}&per_page=1&orientation=portrait"
-        response = requests.get(url, headers={"Authorization": api_key}, timeout=10)
-        if response.status_code == 200:
-            data = response.json()
-            if data.get("photos"):
-                img_url = data["photos"][0]["src"]["large2x"]
-                return Image.open(BytesIO(requests.get(img_url, timeout=15).content))
-    except: return None
+        response = requests.get(url, params=params)
+        data = response.json()
+        
+        # 검색 결과 중 첫 번째 이미지 링크 가져오기
+        if "images_results" in data and len(data["images_results"]) > 0:
+            img_url = data["images_results"][0]["original"]
+            img_data = requests.get(img_url, timeout=10).content
+            return Image.open(BytesIO(img_data))
+    except Exception as e:
+        print(f"이미지 검색 실패: {e}")
     return None
 
 def draw_japanese_text_forced(draw, position, text, font, text_color, outline_color, outline_width=2):
@@ -153,7 +161,7 @@ if st.button("🚀 카드뉴스 5장 생성하기"):
                 
                 generated_images = []
                 for idx, slide in enumerate(slides_data):
-                    bg = fetch_pexels_image(slide.get("search_keyword", "abstract"), pexels_key) if pexels_key else None
+                    bg = fetch_serpapi_image(slide.get("search_keyword", "abstract"), pexels_key) if pexels_key else None
                     if bg:
                         bg = bg.resize((width, height), Image.Resampling.LANCZOS)
                         bg = ImageEnhance.Brightness(bg).enhance(0.4)
