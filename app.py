@@ -63,7 +63,8 @@ def fetch_serpapi_image(query, api_key):
             
             if img_response.status_code == 200:
                 img_content = BytesIO(img_response.content)
-                return Image.open(img_content)
+                # 다운받은 이미지를 무조건 RGB(일반 컬러) 모드로 강제 변환합니다.
+                return Image.open(img_content).convert("RGB")
                 
     except Exception as e:
         return None
