@@ -255,17 +255,3 @@ if st.button("🚀 카드뉴스 5장 생성하기"):
                             st.error(f"메일 발송 실패 사유: {e}")
 
                 # (기존 메일 전송 코드 위치에 아래 내용을 넣으세요)
-try:
-    msg = MIMEText("테스트 본문")
-    msg['Subject'] = "테스트 제목"
-    msg['From'] = st.secrets["GMAIL_USER"]
-    msg['To'] = st.secrets["GMAIL_USER"] # 일단 본인에게 보내기
-
-    s = smtplib.SMTP('smtp.gmail.com', 587)
-    s.starttls()
-    s.login(st.secrets["GMAIL_USER"], st.secrets["GMAIL_PASS"])
-    s.sendmail(st.secrets["GMAIL_USER"], st.secrets["GMAIL_USER"], msg.as_string())
-    s.quit()
-    st.success("진짜로 전송 성공!")
-except Exception as e:
-    st.error(f"메일 발송 실패 사유: {e}") # 여기서 왜 안 가는지 정확히 말해줄 겁니다.
