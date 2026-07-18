@@ -13,6 +13,11 @@ from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance
 import google.generativeai as genai
 from serpapi import GoogleSearch
+
+# 세션 상태 초기화 (버튼 누른 상태를 기억함)
+if "sending_email" not in st.session_state:
+    st.session_state.sending_email = False
+    
 # 만약 위 코드가 계속 에러가 난다면 아래 방식으로 바꿔보세요:
 # import serpapi
 # client = serpapi.Client(api_key="내_API_KEY")
@@ -238,28 +243,27 @@ if st.button("🚀 카드뉴스 5장 생성하기"):
                 st.info(f"📬 설정된 계정({target_email})으로 발송됩니다.")
                 
                 # --- ✨ 이메일 전송 로직 개선 ---
+            # 버튼 클릭 시 세션 상태를 True로 변경
             if st.button("📤 내 이메일로 바로 전송하기"):
-                # 1. 파일이 진짜 있는지 먼저 체크
-                file_names = [fname for fname, img in generated_images]
-                missing_files = [f for f in file_names if not os.path.exists(f)]
-    
-                if missing_files:
-                    st.error(f"파일이 생성되지 않았습니다: {missing_files}")
-                else:
-                    # 2. 로딩 메시지 명시 (여기에 스피너를 확실히 넣습니다)
-                    with st.spinner("메일 서버에 연결하여 파일을 전송 중입니다..."):
-                        try:
-                            send_email_with_images(
-                                sender_email=st.secrets["GMAIL_USER"],
-                                app_password=st.secrets["GMAIL_PASS"].replace(" ", ""),
-                                receiver_email=st.secrets["GMAIL_USER"],
-                                subject=f"[카드뉴스] '{user_topic}' 카드뉴스 발송",
-                                image_files=file_names
-                            )
-                            st.success("✅ 메일 발송 성공!")
-                        except Exception as e:
-                            # 에러 발생 시 초기화되지 않도록 상세 내용을 띄웁니다.
-                            st.error(f"메일 발송 오류 발생: {e}")
-                            st.exception(e) # 에러의 상세 위치를 보여줌
+            st.session_state.sending_email = True
+
+            # 세션 상태가 True일 때 실제 메일 발송 로직 실행
+            if st.session_state.sending_email:
+                try:
+                    with st.spinner("메일 발송 중..."):
+                        file_names = [fname for fname, img in generated_images]
+                        send_email_with_images(
+                            sender_email=st.secrets["GMAIL_USER"],
+                            app_password=st.secrets["GMAIL_PASS"].replace(" ", ""),
+                            receiver_email=st.secrets["GMAIL_USER"],
+                            subject=f"[카드뉴스] '{user_topic}' 카드뉴스 발송",
+                            image_files=file_names
+                        )
+                        st.success("✅ 메일 발송 완료!")
+                except Exception as e:
+                    st.error(f"오류 발생: {e}")
+                finally:
+                    # 작업이 끝나면 상태를 다시 False로 돌림
+                    st.session_state.sending_email = False
 
                 # (기존 메일 전송 코드 위치에 아래 내용을 넣으세요)
